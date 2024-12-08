@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fleetman-queue
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fleetman-queue  # Correspond au label du service
+  template:
+    metadata:
+      labels:
+        app: fleetman-queue  # Correspond au label du service
+    spec:
+      containers:
+        - name: activemq
+          image: supinfo4kube/queue:1.1.0
+          ports:
+            - containerPort: 61616  # Port JMS
+            - containerPort: 8161   # Port HTTP pour la gestion d'ActiveMQ
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fleetman-queue
+  namespace: default
+spec:
+  selector:
+    app: fleetman-queue  # Assurez-vous que le label correspond au Deployment
+  ports:
+    - name: http
+      port: 61616
+      targetPort: 61616  # Port JMS
+    - name: jms
+      port: 8161
+      targetPort: 8161   # Port HTTP pour la gestion d'ActiveMQ
+  type: ClusterIP  # Accès interne au cluster

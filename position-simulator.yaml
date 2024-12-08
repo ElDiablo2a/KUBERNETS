@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fleetman-position-simulator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: position-simulator
+  template:
+    metadata:
+      labels:
+        app: position-simulator
+    spec:
+      containers:
+        - name: position-simulator
+          image: supinfo4kube/position-simulator:1.1.0
+          
+
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: production-microservice
+            - name: SPRING_JMS_BROKER_URL
+              value: "tcp://fleetman-queue.default.svc.cluster.local:61616"  # URL de ActiveMQ
+            - name: SPRING_JMS_LISTENER_DESTINATION
+              value: "positionQueue"  # Nom de la queue ActiveMQ que le simulateur utilise
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fleetman-position-simulator
+spec:
+  selector:
+    app: position-simulator
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+  type: ClusterIP
